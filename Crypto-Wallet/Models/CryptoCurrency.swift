@@ -6,6 +6,7 @@ struct CryptoCurrency: Identifiable {
     let symbol: String
     let currentPrice: Double
     let previousPrice: Double
+    var amountOwned: Double = 0
 
     var changePercentage: Double {
         ((currentPrice - previousPrice) / previousPrice) * 100
@@ -13,5 +14,9 @@ struct CryptoCurrency: Identifiable {
 
     var isUp: Bool {
         currentPrice >= previousPrice
+    }
+    
+    var valueHeld: Double {
+        amountOwned * currentPrice
     }
 }

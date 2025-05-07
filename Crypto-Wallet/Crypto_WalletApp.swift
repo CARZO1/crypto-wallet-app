@@ -1,10 +1,16 @@
 import SwiftUI
 
 @main
-struct Crypto_WalletApp: App {
+struct CryptoWalletApp: App {
+    @State private var isLoggedIn = false
+
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            if isLoggedIn {
+                DashboardView()
+            } else {
+                LoginView(isLoggedIn: $isLoggedIn)
+            }
         }
     }
 }

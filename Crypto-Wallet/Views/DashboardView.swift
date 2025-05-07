@@ -1,17 +1,22 @@
 import SwiftUI
 
 struct DashboardView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @ObservedObject var viewModel = WalletViewModel()
 
-#Preview {
-    DashboardView()
+    var body: some View {
+        NavigationView {
+            VStack {
+                Text("Balance: $\(viewModel.balance, specifier: "%.2f")")
+                    .font(.headline)
+                    .padding(.top)
+
+                List(viewModel.currencies) { currency in
+                    NavigationLink(destination: CurrencyDetailView(viewModel: viewModel, currency: currency)) {
+                        CurrencyCardView(currency: currency)
+                    }
+                }
+            }
+            .navigationTitle("My Wallet")
+        }
+    }
 }
