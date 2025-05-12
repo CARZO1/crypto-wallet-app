@@ -7,6 +7,7 @@ struct CryptoCurrency: Identifiable {
     let currentPrice: Double
     let previousPrice: Double
     var amountOwned: Double = 0
+    var logoURL: String? = nil
 
     var changePercentage: Double {
         ((currentPrice - previousPrice) / previousPrice) * 100

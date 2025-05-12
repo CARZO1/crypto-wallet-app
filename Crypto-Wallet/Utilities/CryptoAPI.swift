@@ -3,31 +3,48 @@ import Foundation
 class CryptoAPIService {
     static let shared = CryptoAPIService()
 
-    func fetchPrices(for ids: [String], completion: @escaping ([String: Double]) -> Void) {
+    func fetchPrices(for ids: [String], completion: @escaping ([CryptoCurrency]) -> Void) {
         let joinedIds = ids.joined(separator: ",")
-        let urlString = "https://api.coingecko.com/api/v3/simple/price?ids=\(joinedIds)&vs_currencies=usd"
+        let urlString = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=aud&ids=\(joinedIds)"
 
         guard let url = URL(string: urlString) else {
-            completion([:])
+            completion([])
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            guard let data = data, error == nil else {
-                completion([:])
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if error != nil {
+                completion([])
+                return
+            }
+
+            guard let data = data else {
+                completion([])
                 return
             }
 
             do {
-                let result = try JSONDecoder().decode([String: [String: Double]].self, from: data)
-                var prices: [String: Double] = [:]
-                for (key, value) in result {
-                    prices[key] = value["usd"]
+                let decoded = try JSONDecoder().decode([CoinMarketData].self, from: data)
+                let currencies = decoded.map {
+                    CryptoCurrency(
+                        name: $0.name,
+                        symbol: $0.symbol.uppercased(),
+                        currentPrice: $0.current_price,
+                        previousPrice: $0.current_price * 0.98,
+                        logoURL: $0.image
+                    )
                 }
-                    completion(prices)
+                completion(currencies)
             } catch {
-                completion([:])
+                completion([])
             }
         }.resume()
     }
+}
+
+struct CoinMarketData: Decodable {
+    let name: String
+    let symbol: String
+    let current_price: Double
+    let image: String
 }

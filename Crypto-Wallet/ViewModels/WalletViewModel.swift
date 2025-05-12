@@ -4,6 +4,32 @@ class WalletViewModel: ObservableObject {
     @Published var currencies: [CryptoCurrency] = []
     @Published var balance: Double = 100_000
 
+    init() {
+        loadData()
+    }
+
+    func loadData() {
+        let coinGeckoIDs = ["bitcoin", "ethereum", "solana", "ripple", "binancecoin", "dogecoin", "cardano", "tether"]
+
+        CryptoAPIService.shared.fetchPrices(for: coinGeckoIDs) { currencies in
+            DispatchQueue.main.async {
+                if currencies.isEmpty {
+                    print("No currencies returned from CoinGecko.")
+                } else {
+                    print("Received \(currencies.count) currencies from API.")
+                    currencies.forEach { print(" - \($0.name): \($0.currentPrice) AUD") }
+                }
+
+                self.currencies = currencies
+                self.loadHoldings()
+            }
+        }
+    }
+
+    var portfolioValue: Double {
+        currencies.reduce(0) { $0 + $1.valueHeld }
+    }
+
     func buy(_ currency: CryptoCurrency, amountInDollars: Double) {
         guard amountInDollars <= balance else { return }
 
@@ -12,6 +38,7 @@ class WalletViewModel: ObservableObject {
             let amountToBuy = amountInDollars / price
             currencies[index].amountOwned += amountToBuy
             balance -= amountInDollars
+            saveHoldings()
         }
     }
 
@@ -24,26 +51,23 @@ class WalletViewModel: ObservableObject {
 
             currencies[index].amountOwned -= amountToSell
             balance += amountInDollars
+            saveHoldings()
         }
     }
-    
-    init() {
-        loadData()
-    }
 
-    func loadData() {
-        CryptoAPIService.shared.fetchPrices(for: ["bitcoin", "ethereum", "solana", "ripple", "binancecoin", "dogecoin", "cardano", "tether"]) { prices in
-            DispatchQueue.main.async {
-                self.currencies = [
-                    CryptoCurrency(name: "Bitcoin", symbol: "BTC", currentPrice: prices["bitcoin"] ?? 0, previousPrice: (prices["bitcoin"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "Ethereum", symbol: "ETH", currentPrice: prices["ethereum"] ?? 0, previousPrice: (prices["ethereum"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "Solana", symbol: "SOL", currentPrice: prices["solana"] ?? 0, previousPrice: (prices["solana"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "XRP", symbol: "XRP", currentPrice: prices["ripple"] ?? 0, previousPrice: (prices["ripple"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "BNB", symbol: "BNB", currentPrice: prices["binancecoin"] ?? 0, previousPrice: (prices["binancecoin"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "Dogecoin", symbol: "DOGE", currentPrice: prices["dogecoin"] ?? 0, previousPrice: (prices["dogecoin"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "Cardano", symbol: "ADA", currentPrice: prices["cardano"] ?? 0, previousPrice: (prices["cardano"] ?? 0) * 0.98),
-                    CryptoCurrency(name: "Tether", symbol: "USDT", currentPrice: prices["tether"] ?? 0, previousPrice: (prices["tether"] ?? 0) * 0.98)
-                ]
+    private func saveHoldings() {
+        let holdings = currencies.map { [$0.symbol: $0.amountOwned] }
+        UserDefaults.standard.set(holdings, forKey: "userHoldings")
+    }
+    
+    private func loadHoldings() {
+        if let saved = UserDefaults.standard.array(forKey: "userHoldings") as? [[String: Double]] {
+            for holding in saved {
+                for (symbol, amount) in holding {
+                    if let index = currencies.firstIndex(where: { $0.symbol.uppercased() == symbol.uppercased() }) {
+                        currencies[index].amountOwned = amount
+                    }
+                }
             }
         }
     }
