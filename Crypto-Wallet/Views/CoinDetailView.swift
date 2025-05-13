@@ -16,7 +16,6 @@ struct CoinDetailView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // logo
             AsyncImage(url: URL(string: currency.logoURL ?? "")) { image in
                 image.resizable()
             } placeholder: {
@@ -29,9 +28,9 @@ struct CoinDetailView: View {
             Text(currency.name)
                 .font(.largeTitle)
 
-            Text("Price: $\(currency.currentPrice, specifier: "%.2f")")
-            Text("You own: \(currency.amountOwned, specifier: "%.6f") \(currency.symbol)")
-            Text("Current Value: $\(currency.valueHeld, specifier: "%.2f")")
+            Text("**Price:** $\(currency.currentPrice, specifier: "%.2f")")
+            Text("**You own:** \(currency.amountOwned, specifier: "%.6f") \(currency.symbol)")
+            Text("**Current Value:** $\(currency.valueHeld, specifier: "%.2f")")
 
             TextField("Enter AUD amount", text: $dollarAmount)
                 .keyboardType(.decimalPad)
@@ -44,7 +43,6 @@ struct CoinDetailView: View {
                     .foregroundColor(.gray)
             }
 
-            // buttons
             HStack {
                 Button("Buy") {
                     if let amount = Double(dollarAmount) {

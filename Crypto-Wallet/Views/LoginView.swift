@@ -9,8 +9,11 @@ struct LoginView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Crypto Wallet Login")
-                .font(.title)
+            Image("ftx_logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 150, height: 150)
+                .padding(.top, 40)
 
             TextField("Email", text: $email)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
